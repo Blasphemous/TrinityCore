@@ -408,31 +408,14 @@ class spell_sha_earth_shield : public SpellScriptLoader
             {
                 if (!sSpellMgr->GetSpellInfo(SPELL_SHAMAN_EARTH_SHIELD_HEAL))
                     return false;
-                if (!sSpellMgr->GetSpellInfo(SPELL_SHAMAN_GLYPH_OF_EARTH_SHIELD))
-                    return false;
                 return true;
             }
 
-            void CalculateAmount(AuraEffect const* /*aurEff*/, int32& amount, bool & /*canBeRecalculated*/)
+            void CalculateAmount(AuraEffect const* /*aurEff*/, int32& amount, bool& /*canBeRecalculated*/)
             {
                 if (Unit* caster = GetCaster())
-                {
                     amount = caster->SpellHealingBonusDone(GetUnitOwner(), GetSpellInfo(), amount, HEAL);
-                    amount = GetUnitOwner()->SpellHealingBonusTaken(caster, GetSpellInfo(), amount, HEAL);
-
-                    //! WORKAROUND
-                    // If target is affected by healing reduction, modifier is guaranteed to be negative
-                    // value (e.g. -50). To revert the effect, multiply amount with reciprocal of relative value:
-                    // (100 / ((-1) * modifier)) * 100 = (-1) * 100 * 100 / modifier = -10000 / modifier
-                    if (int32 modifier = GetUnitOwner()->GetMaxNegativeAuraModifier(SPELL_AURA_MOD_HEALING_PCT))
-                        ApplyPct(amount, -10000.0f / float(modifier));
-
-                    // Glyph of Earth Shield
-                    //! WORKAROUND
-                    //! this glyph is a proc
-                    if (AuraEffect* glyph = caster->GetAuraEffect(SPELL_SHAMAN_GLYPH_OF_EARTH_SHIELD, EFFECT_0))
-                        AddPct(amount, glyph->GetAmount());
-                }
+                // SpellHealingBonusTaken will be called on Heal
             }
 
             void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
@@ -786,6 +769,45 @@ class spell_sha_frozen_power : public SpellScriptLoader
         AuraScript* GetAuraScript() const override
         {
             return new spell_sha_frozen_power_AuraScript();
+        }
+};
+
+// 63279 - Glyph of Earth Shield
+class spell_sha_glyph_of_earth_shield : public SpellScriptLoader
+{
+    public:
+        spell_sha_glyph_of_earth_shield() : SpellScriptLoader("spell_sha_glyph_of_earth_shield") { }
+
+        class spell_sha_glyph_of_earth_shield_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_sha_glyph_of_earth_shield_AuraScript);
+
+            void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
+            {
+                PreventDefaultAction();
+
+                SpellInfo const* earthShield = eventInfo.GetSpellInfo();
+                if (!earthShield)
+                    return;
+
+                AuraEffect* earthShieldEffect = eventInfo.GetProcTarget()->GetAuraEffect(earthShield->Id, EFFECT_0, eventInfo.GetActor()->GetGUID());
+                if (!earthShieldEffect)
+                    return;
+
+                int32 amount = earthShieldEffect->GetAmount();
+                AddPct(amount, aurEff->GetAmount());
+                earthShieldEffect->SetAmount(amount);
+            }
+
+            void Register() override
+            {
+                OnEffectProc += AuraEffectProcFn(spell_sha_glyph_of_earth_shield_AuraScript::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
+            }
+        };
+
+        AuraScript* GetAuraScript() const override
+        {
+            return new spell_sha_glyph_of_earth_shield_AuraScript();
         }
 };
 
@@ -2249,6 +2271,7 @@ void AddSC_shaman_spell_scripts()
     new spell_sha_flame_shock();
     new spell_sha_flametongue_weapon();
     new spell_sha_frozen_power();
+    new spell_sha_glyph_of_earth_shield();
     new spell_sha_glyph_of_healing_wave();
     new spell_sha_glyph_of_totem_of_wrath();
     new spell_sha_healing_stream_totem();
