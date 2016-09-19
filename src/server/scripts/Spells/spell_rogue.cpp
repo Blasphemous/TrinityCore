@@ -969,16 +969,21 @@ public:
     {
         PrepareAuraScript(spell_rog_honor_among_thieves_AuraScript);
 
+        bool Validate(SpellInfo const* spellInfo) override
+        {
+            if (!sSpellMgr->GetSpellInfo(SPELL_ROGUE_HONOR_AMONG_THIEVES_2) ||
+                !sSpellMgr->GetSpellInfo(spellInfo->Effects[EFFECT_0].TriggerSpell))
+                return false;
+            return true;
+        }
+
         bool CheckProc(ProcEventInfo& /*eventInfo*/)
         {
             Unit* caster = GetCaster();
-            if (!caster)
+            if (!caster || caster->HasAura(SPELL_ROGUE_HONOR_AMONG_THIEVES_2))
                 return false;
 
-            if (!caster->GetSpellHistory()->HasCooldown(GetSpellInfo()->Effects[EFFECT_0].TriggerSpell))
-                return true;
-
-            return false;
+            return true;
         }
 
         void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
@@ -990,7 +995,7 @@ public:
                 return;
 
             Unit* target = GetTarget();
-            target->CastSpell(target, GetSpellInfo()->Effects[EFFECT_0].TriggerSpell, TriggerCastFlags(TRIGGERED_FULL_MASK & ~TRIGGERED_IGNORE_SPELL_AND_CATEGORY_CD), nullptr, aurEff, caster->GetGUID());
+            target->CastSpell(target, GetSpellInfo()->Effects[aurEff->GetEffIndex()].TriggerSpell, true, nullptr, aurEff, caster->GetGUID());
         }
 
         void Register() override
@@ -1035,36 +1040,9 @@ public:
             targets.push_back(target);
         }
 
-        void HandleBeforeHit()
-        {
-            Unit* target = GetHitUnit();
-            if (!target)
-                return;
-
-            /*
-             * The applied aura has a duration of 8 seconds
-             * This prevents new applications while its active
-             * Removing it on each new proc enables the application from different sources (different grouped players)
-             * and on new procs after the source cooldown is finished (1 second)
-             */
-            if (target->HasAura(GetSpellInfo()->Id))
-                target->RemoveAura(GetSpellInfo()->Id);
-        }
-
-        void TriggerCooldown()
-        {
-            Unit* target = GetHitUnit();
-            if (!target)
-                return;
-
-            target->GetSpellHistory()->AddCooldown(GetSpellInfo()->Id, 0, std::chrono::seconds(1));
-        }
-
         void Register() override
         {
             OnObjectAreaTargetSelect += SpellObjectAreaTargetSelectFn(spell_rog_honor_among_thieves_proc_SpellScript::FilterTargets, EFFECT_0, TARGET_UNIT_CASTER_AREA_PARTY);
-            BeforeHit += SpellHitFn(spell_rog_honor_among_thieves_proc_SpellScript::HandleBeforeHit);
-            AfterHit += SpellHitFn(spell_rog_honor_among_thieves_proc_SpellScript::TriggerCooldown);
         }
     };
 
@@ -1079,14 +1057,17 @@ public:
 
         void HandleEffectApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
         {
-            if (Player* player = GetTarget()->ToPlayer())
-                if (Unit* spellTarget = ObjectAccessor::GetUnit(*player, player->GetTarget()))
-                    player->CastSpell(spellTarget, SPELL_ROGUE_HONOR_AMONG_THIEVES_2, true);
+            Unit* caster = GetCaster();
+            if (!caster)
+                return;
+
+            if (Player* player = caster->ToPlayer())
+                player->CastSpell((Unit*)nullptr, SPELL_ROGUE_HONOR_AMONG_THIEVES_2, true);
         }
 
         void Register() override
         {
-            AfterEffectApply += AuraEffectApplyFn(spell_rog_honor_among_thieves_proc_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL);
+            AfterEffectApply += AuraEffectApplyFn(spell_rog_honor_among_thieves_proc_AuraScript::HandleEffectApply, EFFECT_0, SPELL_AURA_DUMMY, AURA_EFFECT_HANDLE_REAL_OR_REAPPLY_MASK);
         }
     };
 
