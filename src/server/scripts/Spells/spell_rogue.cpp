@@ -1096,40 +1096,6 @@ public:
     }
 };
 
-// 70805 - Rogue T10 2P Bonus -- THIS SHOULD BE REMOVED WITH NEW PROC SYSTEM.
-class spell_rog_t10_2p_bonus : public SpellScriptLoader
-{
-public:
-    spell_rog_t10_2p_bonus() : SpellScriptLoader("spell_rog_t10_2p_bonus") { }
-
-    class spell_rog_t10_2p_bonus_AuraScript : public AuraScript
-    {
-        PrepareAuraScript(spell_rog_t10_2p_bonus_AuraScript);
-
-        bool Validate(SpellInfo const* /*spellInfo*/) override
-        {
-            if (!sSpellMgr->GetSpellInfo(SPELL_ROGUE_T10_2P_BONUS))
-                return false;
-            return true;
-        }
-
-        bool CheckProc(ProcEventInfo& eventInfo)
-        {
-            return eventInfo.GetActor() == eventInfo.GetActionTarget();
-        }
-
-        void Register() override
-        {
-            DoCheckProc += AuraCheckProcFn(spell_rog_t10_2p_bonus_AuraScript::CheckProc);
-        }
-    };
-
-    AuraScript* GetAuraScript() const override
-    {
-        return new spell_rog_t10_2p_bonus_AuraScript();
-    }
-};
-
 // -51627 - Turn the Tables
 class spell_rog_turn_the_tables : public SpellScriptLoader
 {
@@ -1225,7 +1191,6 @@ void AddSC_rogue_spell_scripts()
     new spell_rog_tricks_of_the_trade_proc();
     new spell_rog_honor_among_thieves();
     new spell_rog_honor_among_thieves_proc();
-    new spell_rog_t10_2p_bonus();
     new spell_rog_turn_the_tables();
     new spell_rog_turn_the_tables_proc();
 }

@@ -435,30 +435,16 @@ class spell_sha_earth_shield : public SpellScriptLoader
                 }
             }
 
-            bool CheckProc(ProcEventInfo& /*eventInfo*/)
-            {
-                //! HACK due to currenct proc system implementation
-                if (Player* player = GetTarget()->ToPlayer())
-                    if (player->GetSpellHistory()->HasCooldown(SPELL_SHAMAN_EARTH_SHIELD_HEAL))
-                        return false;
-                return true;
-            }
-
             void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
             {
                 PreventDefaultAction();
 
                 GetTarget()->CastCustomSpell(SPELL_SHAMAN_EARTH_SHIELD_HEAL, SPELLVALUE_BASE_POINT0, aurEff->GetAmount(), GetTarget(), true, NULL, aurEff, GetCasterGUID());
-
-                /// @hack: due to currenct proc system implementation
-                if (Player* player = GetTarget()->ToPlayer())
-                    player->GetSpellHistory()->AddCooldown(SPELL_SHAMAN_EARTH_SHIELD_HEAL, 0, std::chrono::seconds(3));
             }
 
             void Register() override
             {
                 DoEffectCalcAmount += AuraEffectCalcAmountFn(spell_sha_earth_shield_AuraScript::CalculateAmount, EFFECT_0, SPELL_AURA_DUMMY);
-                DoCheckProc += AuraCheckProcFn(spell_sha_earth_shield_AuraScript::CheckProc);
                 OnEffectProc += AuraEffectProcFn(spell_sha_earth_shield_AuraScript::HandleProc, EFFECT_0, SPELL_AURA_DUMMY);
             }
         };
