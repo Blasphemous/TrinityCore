@@ -968,7 +968,7 @@ void AuraEffect::HandleProc(AuraApplication* aurApp, ProcEventInfo& eventInfo)
 
     switch (GetAuraType())
     {
-        // CC Auras which use their amount amount to drop
+        // CC Auras which use their amount to drop
         // Are there any more auras which need this?
         case SPELL_AURA_MOD_CONFUSE:
         case SPELL_AURA_MOD_FEAR:
