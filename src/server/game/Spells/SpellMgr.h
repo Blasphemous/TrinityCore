@@ -235,7 +235,8 @@ enum ProcFlagsHit
 enum ProcAttributes
 {
     PROC_ATTR_REQ_EXP_OR_HONOR   = 0x0000001, // requires proc target to give exp or honor for aura proc
-    PROC_ATTR_TRIGGERED_CAN_PROC = 0x0000002  // aura can proc even with triggered spells
+    PROC_ATTR_TRIGGERED_CAN_PROC = 0x0000002, // aura can proc even with triggered spells
+    PROC_ATTR_REQ_MANA_COST      = 0x0000004  // requires triggering spell to have a mana cost for aura proc
 };
 
 struct SpellProcEntry

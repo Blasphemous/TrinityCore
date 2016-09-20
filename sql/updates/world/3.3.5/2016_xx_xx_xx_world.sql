@@ -155,7 +155,7 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 (28845,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x0, 0x0,     0, 0x0,  0,   0,      0, 0), -- Cheat Death
 (28847,   0,  7, 0x00000020, 0x00000000, 0x00000000,       0, 0x2, 0x2,     0, 0x0,  0,   0,      0, 0), -- Healing Touch Refund
 (28849,   0, 11, 0x00000080, 0x00000000, 0x00000000,       0, 0x2, 0x2,     0, 0x0,  0,   0,      0, 0), -- Lesser Heealing Wave
-(29601,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x0, 0x2,     0, 0x0,  0,   0,      0, 0), -- Enlightenment
+(29601,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x0, 0x2,     0, 0x4,  0,   0,      0, 0), -- Enlightenment
 
 (32863,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x1, 0x0,     0, 0x0,  0,   0,      0, 0), -- Seed of Corruption (Monster)
 (36123,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x1, 0x0,     0, 0x0,  0,   0,      0, 0), -- Seed of Corruption (Monster)
@@ -998,7 +998,7 @@ INSERT INTO `spell_proc` (`SpellId`, `SchoolMask`, `SpellFamilyName`, `SpellFami
 (64955,   0, 10, 0x00000000, 0x00000040, 0x00000000,       0, 0x0, 0x2,     0, 0x0,  0,   0,      0, 0), -- Item - Paladin T8 Protection Relic
 (64964,   0, 15, 0x00000000, 0x20000000, 0x00000000,       0, 0x0, 0x2,     0, 0x0,  0,   0,      0, 0), -- Item - Death Knight T8 Tank Relic
 (64976,   0,  4, 0x00000001, 0x00000000, 0x00000000,       0, 0x0, 0x2,     0, 0x0,  0,   0,      0, 0), -- Juggernaut
-(64999,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x0, 0x2,     0, 0x0,  0,   0,      0, 0), -- Meteoric Inspiration
+(64999,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x0, 0x2,     0, 0x4,  0,   0,      0, 0), -- Meteoric Inspiration
 (65002,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x0, 0x2,     0, 0x0,  0,   0,  45000, 0), -- Bonus Mana Regen
 (65005,   0,  0, 0x00000000, 0x00000000, 0x00000000,       0, 0x1, 0x1,     0, 0x0,  0,   0,  45000, 0), -- Alacrity of the Elements
 (65007,   0,  0, 0x00000000, 0x00000000, 0x00000000,   81920, 0x0, 0x1,     0, 0x0,  0,   0,      0, 0), -- Eye of the Broodmother

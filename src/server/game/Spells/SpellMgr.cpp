@@ -800,6 +800,12 @@ bool SpellMgr::CanSpellTriggerProcOnEvent(SpellProcEntry const& procEntry, ProcE
             if (eventInfo.GetActionTarget() && !actor->isHonorOrXPTarget(eventInfo.GetActionTarget()))
                 return false;
 
+    // check mana requirement
+    if (procEntry.AttributesMask & PROC_ATTR_REQ_MANA_COST)
+        if (SpellInfo const* eventSpellInfo = eventInfo.GetSpellInfo())
+            if (!eventSpellInfo->ManaCost && !eventSpellInfo->ManaCostPercentage)
+                return false;
+
     // do triggered cast checks
     if (Spell const* spell = eventInfo.GetProcSpell())
     {
@@ -1964,6 +1970,8 @@ void SpellMgr::LoadSpellProcs()
             procEntry.AttributesMask |= PROC_ATTR_REQ_EXP_OR_HONOR;
         if (addTriggerFlag)
             procEntry.AttributesMask |= PROC_ATTR_TRIGGERED_CAN_PROC;
+        if (spellInfo->HasAura(SPELL_AURA_MOD_POWER_COST_SCHOOL) || spellInfo->HasAura(SPELL_AURA_MOD_POWER_COST_SCHOOL_PCT))
+            procEntry.AttributesMask |= PROC_ATTR_REQ_MANA_COST; // Skip spells with zero cost
 
         procEntry.ProcsPerMinute  = 0;
         procEntry.Chance          = spellInfo->ProcChance;
