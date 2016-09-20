@@ -1230,7 +1230,11 @@ class spell_sha_item_mana_surge : public SpellScriptLoader
             void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
             {
                 PreventDefaultAction();
-                int32 mana = eventInfo.GetDamageInfo()->GetSpellInfo()->CalcPowerCost(GetTarget(), eventInfo.GetSchoolMask());
+                SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
+                if (!spellInfo)
+                    return;
+
+                int32 mana = spellInfo->CalcPowerCost(GetTarget(), eventInfo.GetSchoolMask());
                 int32 damage = CalculatePct(mana, 35);
 
                 GetTarget()->CastCustomSpell(SPELL_SHAMAN_ITEM_MANA_SURGE, SPELLVALUE_BASE_POINT0, damage, GetTarget(), true, NULL, aurEff);
@@ -1592,11 +1596,15 @@ public:
         void HandleProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
         {
             PreventDefaultAction();
+            DamageInfo* damageInfo = eventInfo.GetDamageInfo();
+            if (!damageInfo)
+                return;
+
             int32 healthpct = aurEff->GetSpellInfo()->Effects[EFFECT_1].CalcValue(); // %s2 - the 30% threshold for health
 
             if (Unit* target = eventInfo.GetActionTarget())
             {
-                if (target->HealthBelowPctDamaged(healthpct, eventInfo.GetDamageInfo()->GetDamage()))
+                if (target->HealthBelowPctDamaged(healthpct, damageInfo->GetDamage()))
                 {
 
                     uint32 bp = CalculatePct(target->GetMaxHealth(), aurEff->GetAmount());

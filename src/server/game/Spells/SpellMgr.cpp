@@ -1693,8 +1693,6 @@ void SpellMgr::LoadSpellGroupStackRules()
 static bool InitTriggerAuraData();
 // Define can trigger auras
 static bool isTriggerAura[TOTAL_AURAS];
-// Define can't trigger auras (need for disable second trigger)
-static bool isNonTriggerAura[TOTAL_AURAS];
 // Triggered always, even from triggered spells
 static bool isAlwaysTriggeredAura[TOTAL_AURAS];
 // Prepare lists
@@ -1709,7 +1707,6 @@ bool InitTriggerAuraData()
     for (uint16 i = 0; i < TOTAL_AURAS; ++i)
     {
         isTriggerAura[i] = false;
-        isNonTriggerAura[i] = false;
         isAlwaysTriggeredAura[i] = false;
     }
     isTriggerAura[SPELL_AURA_DUMMY] = true;
@@ -1746,9 +1743,6 @@ bool InitTriggerAuraData()
     isTriggerAura[SPELL_AURA_ADD_FLAT_MODIFIER] = true;
     isTriggerAura[SPELL_AURA_ADD_PCT_MODIFIER] = true;
     isTriggerAura[SPELL_AURA_ABILITY_IGNORE_AURASTATE] = true;
-
-    isNonTriggerAura[SPELL_AURA_MOD_POWER_REGEN] = true;
-    isNonTriggerAura[SPELL_AURA_REDUCE_PUSHBACK] = true;
 
     isAlwaysTriggeredAura[SPELL_AURA_OVERRIDE_CLASS_SCRIPTS] = true;
     isAlwaysTriggeredAura[SPELL_AURA_MOD_FEAR] = true;
@@ -1897,7 +1891,7 @@ void SpellMgr::LoadSpellProcs()
     count = 0;
     oldMSTime = getMSTime();
 
-    for (SpellInfo* spellInfo : mSpellInfoMap)
+    for (SpellInfo const* spellInfo : mSpellInfoMap)
     {
         if (!spellInfo)
             continue;
@@ -1913,9 +1907,6 @@ void SpellMgr::LoadSpellProcs()
 
             uint32 auraName = spellInfo->Effects[i].ApplyAuraName;
             if (!auraName)
-                continue;
-
-            if (isNonTriggerAura[auraName])
                 continue;
 
             if (!isTriggerAura[auraName])
@@ -1936,7 +1927,7 @@ void SpellMgr::LoadSpellProcs()
 
         SpellProcEntry procEntry;
         procEntry.SchoolMask      = 0;
-        // check some aura types that should proc on (miscvalue & spellMask) != 0
+        // check some aura types that should proc on (miscvalue & schoolMask) != 0
         auto checkAuraType = [&procEntry, spellInfo](AuraType aurType)
         {
             for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
@@ -1951,15 +1942,22 @@ void SpellMgr::LoadSpellProcs()
         procEntry.SpellFamilyName = spellInfo->SpellFamilyName;
         procEntry.ProcFlags = spellInfo->ProcFlags;
         for (uint32 i = 0; i < MAX_SPELL_EFFECTS; ++i)
-            if (spellInfo->Effects[i].IsEffect())
+            if (spellInfo->Effects[i].IsEffect() && isTriggerAura[spellInfo->Effects[i].ApplyAuraName])
                 procEntry.SpellFamilyMask |= spellInfo->Effects[i].SpellClassMask;
 
         procEntry.SpellTypeMask   = PROC_SPELL_TYPE_MASK_ALL;
         procEntry.SpellPhaseMask  = PROC_SPELL_PHASE_HIT;
         procEntry.HitMask         = PROC_HIT_NONE; // uses default proc @see SpellMgr::CanSpellTriggerProcOnEvent
+
+        // Reflect auras should only proc off reflects
         for (uint32 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+        {
             if (spellInfo->Effects[i].IsAura(SPELL_AURA_REFLECT_SPELLS) || spellInfo->Effects[i].IsAura(SPELL_AURA_REFLECT_SPELLS_SCHOOL))
-                procEntry.HitMask |= PROC_HIT_REFLECT;
+            {
+                procEntry.HitMask = PROC_HIT_REFLECT;
+                break;
+            }
+        }
 
         procEntry.AttributesMask  = 0;
         if (spellInfo->ProcFlags & PROC_FLAG_KILL)
@@ -1976,7 +1974,7 @@ void SpellMgr::LoadSpellProcs()
         ++count;
     }
 
-    TC_LOG_INFO("server.loading", ">> Generated spell proc data for %u in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
+    TC_LOG_INFO("server.loading", ">> Generated spell proc data for %u spells in %u ms", count, GetMSTimeDiffToNow(oldMSTime));
 }
 
 void SpellMgr::LoadSpellBonusess()
