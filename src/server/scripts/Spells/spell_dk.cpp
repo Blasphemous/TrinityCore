@@ -2116,7 +2116,7 @@ class spell_dk_scent_of_blood : public SpellScriptLoader
             {
                 PreventDefaultAction();
                 GetTarget()->CastSpell(GetTarget(), SPELL_DK_SCENT_OF_BLOOD, true, NULL, aurEff);
-                GetTarget()->RemoveAuraFromStack(GetSpellInfo()->Id);
+                ModStackAmount(-1);
             }
 
             void Register() override
@@ -2128,6 +2128,37 @@ class spell_dk_scent_of_blood : public SpellScriptLoader
         AuraScript* GetAuraScript() const override
         {
             return new spell_dk_scent_of_blood_AuraScript();
+        }
+};
+
+// -49004 - Scent of Blood trigger
+class spell_dk_scent_of_blood_trigger : public SpellScriptLoader
+{
+    public:
+        spell_dk_scent_of_blood_trigger() : SpellScriptLoader("spell_dk_scent_of_blood_trigger") { }
+
+        class spell_dk_scent_of_blood_trigger_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_dk_scent_of_blood_trigger_AuraScript);
+
+            // Each rank of Scent of Blood adds a trigger spell effect
+            // thus each effect adds one stack when proccing
+            // We need to remove the old buff before proccing again
+            // or we would be adding stacks to a possibly existing aura
+            void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
+            {
+                GetTarget()->RemoveAurasDueToSpell(GetSpellInfo()->Effects[aurEff->GetEffIndex()].TriggerSpell);
+            }
+
+            void Register() override
+            {
+                OnEffectProc += AuraEffectProcFn(spell_dk_scent_of_blood_trigger_AuraScript::HandleProc, EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+            }
+        };
+
+        AuraScript* GetAuraScript() const override
+        {
+            return new spell_dk_scent_of_blood_trigger_AuraScript();
         }
 };
 
@@ -2999,6 +3030,7 @@ void AddSC_deathknight_spell_scripts()
     new spell_dk_rime();
     new spell_dk_rune_tap_party();
     new spell_dk_scent_of_blood();
+    new spell_dk_scent_of_blood_trigger();
     new spell_dk_scourge_strike();
     new spell_dk_spell_deflection();
     new spell_dk_sudden_doom();
