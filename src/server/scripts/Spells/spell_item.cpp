@@ -1324,6 +1324,53 @@ class spell_item_make_a_wish : public SpellScriptLoader
         }
 };
 
+enum MarkOfConquest
+{
+    SPELL_MARK_OF_CONQUEST_ENERGIZE     = 39599
+};
+
+// Item - 27920: Mark of Conquest 
+// Item - 27921: Mark of Conquest 
+// 33510 - Health Restore
+class spell_item_mark_of_conquest : public SpellScriptLoader
+{
+    public:
+        spell_item_mark_of_conquest() : SpellScriptLoader("spell_item_mark_of_conquest") { }
+
+        class spell_item_mark_of_conquest_AuraScript : public AuraScript
+        {
+            PrepareAuraScript(spell_item_mark_of_conquest_AuraScript);
+
+            bool Validate(SpellInfo const* /*spellInfo*/) override
+            {
+                if (!sSpellMgr->GetSpellInfo(SPELL_MARK_OF_CONQUEST_ENERGIZE))
+                    return false;
+                return true;
+            }
+
+            void HandleProc(AuraEffect const* /*aurEff*/, ProcEventInfo& eventInfo)
+            {
+                if (eventInfo.GetTypeMask() & (PROC_FLAG_DONE_RANGED_AUTO_ATTACK | PROC_FLAG_DONE_SPELL_RANGED_DMG_CLASS))
+                {
+                    // in that case, do not cast heal spell
+                    PreventDefaultAction();
+                    // but mana instead
+                    eventInfo.GetActor()->CastSpell((Unit*)nullptr, SPELL_MARK_OF_CONQUEST_ENERGIZE, true);
+                }
+            }
+
+            void Register() override
+            {
+                OnEffectProc += AuraEffectProcFn(spell_item_mark_of_conquest_AuraScript::HandleProc, EFFECT_0, SPELL_AURA_PROC_TRIGGER_SPELL);
+            }
+        };
+
+        AuraScript* GetAuraScript() const override
+        {
+            return new spell_item_mark_of_conquest_AuraScript();
+        }
+};
+
 // http://www.wowhead.com/item=32686 Mingo's Fortune Giblets
 // 40802 Mingo's Fortune Generator
 class spell_item_mingos_fortune_generator : public SpellScriptLoader
@@ -4358,6 +4405,7 @@ void AddSC_item_spell_scripts()
     new spell_item_heartpierce<SPELL_INVIGORATION_ENERGY_HERO, SPELL_INVIGORATION_MANA_HERO, SPELL_INVIGORATION_RAGE_HERO, SPELL_INVIGORATION_RP_HERO>("spell_item_heartpierce_hero");
     new spell_item_crystal_spire_of_karabor();
     new spell_item_make_a_wish();
+    new spell_item_mark_of_conquest();
     new spell_item_mingos_fortune_generator();
     new spell_item_necrotic_touch();
     new spell_item_net_o_matic();
