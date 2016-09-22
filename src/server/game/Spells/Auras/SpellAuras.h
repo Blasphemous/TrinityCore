@@ -53,6 +53,7 @@ class TC_GAME_API AuraApplication
         uint8 _slot;                                   // Aura slot on unit
         uint8 _flags;                                  // Aura info flag
         uint8 _effectsToApply;                         // Used only at spell hit to determine which effect should be applied
+        uint8 _effectProcMask;                         // Used by proc system to save which effects to proc
         bool _needClientUpdate:1;
 
         explicit AuraApplication(Unit* target, Unit* caster, Aura* base, uint8 effMask);
@@ -68,6 +69,9 @@ class TC_GAME_API AuraApplication
         uint8 GetSlot() const { return _slot; }
         uint8 GetFlags() const { return _flags; }
         uint8 GetEffectMask() const { return _flags & (AFLAG_EFF_INDEX_0 | AFLAG_EFF_INDEX_1 | AFLAG_EFF_INDEX_2); }
+        bool CanProcEffect(uint8 effect) const { ASSERT(effect < MAX_SPELL_EFFECTS);  return (_effectProcMask & (1 << effect)) != 0;; }
+        void SetCanProcEffect(uint8 effect) { ASSERT(effect < MAX_SPELL_EFFECTS); _effectProcMask |= (1 << effect); }
+        void ClearProcEffectMask() { _effectProcMask = 0; }
         bool HasEffect(uint8 effect) const { ASSERT(effect < MAX_SPELL_EFFECTS);  return (_flags & (1 << effect)) != 0; }
         bool IsPositive() const { return (_flags & AFLAG_POSITIVE) != 0; }
         bool IsSelfcast() const { return (_flags & AFLAG_CASTER) != 0; }

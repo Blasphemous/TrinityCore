@@ -40,7 +40,7 @@
 
 AuraApplication::AuraApplication(Unit* target, Unit* caster, Aura* aura, uint8 effMask):
 _target(target), _base(aura), _removeMode(AURA_REMOVE_NONE), _slot(MAX_AURAS),
-_flags(AFLAG_NONE), _effectsToApply(effMask), _needClientUpdate(false)
+_flags(AFLAG_NONE), _effectsToApply(effMask), _effectProcMask(0), _needClientUpdate(false)
 {
     ASSERT(GetTarget() && GetBase());
 
@@ -1862,7 +1862,6 @@ void Aura::PrepareProcToTrigger(AuraApplication* aurApp, ProcEventInfo& eventInf
     }
 
     SpellProcEntry const* procEntry = sSpellMgr->GetSpellProcEntry(GetId());
-
     ASSERT(procEntry);
 
     // cooldowns should be added to the whole aura (see 51698 area aura)
@@ -1906,9 +1905,20 @@ bool Aura::IsProcTriggeredOnEvent(AuraApplication* aurApp, ProcEventInfo& eventI
 
     // At least one effect has to pass checks to proc aura
     check = false;
-    for (uint8 i = 0; i < MAX_SPELL_EFFECTS && !check; ++i)
+    for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
+    {
         if (aurApp->HasEffect(i))
-            check = check || GetEffect(i)->CheckEffectProc(aurApp, eventInfo);
+        {
+            AuraEffect* aurEff = GetEffect(i);
+            if (aurEff->CheckEffectProc(aurApp, eventInfo))
+            {
+                aurApp->SetCanProcEffect(i);
+
+                if (!check)
+                    check = true;
+            }
+        }
+    }
 
     if (!check)
         return false;
@@ -1988,10 +1998,11 @@ void Aura::TriggerProcOnEvent(AuraApplication* aurApp, ProcEventInfo& eventInfo)
     if (!prevented)
     {
         for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
-            if (aurApp->HasEffect(i))
+            if (aurApp->HasEffect(i) && aurApp->CanProcEffect(i))
                 // OnEffectProc / AfterEffectProc hooks handled in AuraEffect::HandleProc()
                 GetEffect(i)->HandleProc(aurApp, eventInfo);
 
+        aurApp->ClearProcEffectMask();
         CallScriptAfterProcHandlers(aurApp, eventInfo);
     }
 
