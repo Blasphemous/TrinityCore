@@ -69,7 +69,7 @@ class TC_GAME_API AuraApplication
         uint8 GetSlot() const { return _slot; }
         uint8 GetFlags() const { return _flags; }
         uint8 GetEffectMask() const { return _flags & (AFLAG_EFF_INDEX_0 | AFLAG_EFF_INDEX_1 | AFLAG_EFF_INDEX_2); }
-        bool CanProcEffect(uint8 effect) const { ASSERT(effect < MAX_SPELL_EFFECTS);  return (_effectProcMask & (1 << effect)) != 0;; }
+        bool CanProcEffect(uint8 effect) const { ASSERT(effect < MAX_SPELL_EFFECTS);  return (_effectProcMask & (1 << effect)) != 0; }
         void SetCanProcEffect(uint8 effect) { ASSERT(effect < MAX_SPELL_EFFECTS); _effectProcMask |= (1 << effect); }
         void ClearProcEffectMask() { _effectProcMask = 0; }
         bool HasEffect(uint8 effect) const { ASSERT(effect < MAX_SPELL_EFFECTS);  return (_flags & (1 << effect)) != 0; }
